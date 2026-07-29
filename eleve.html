@@ -112,6 +112,7 @@
     }
     .c-dot.on { width: 10px; height: 10px; background: var(--cyan); }
     .c-ring.on { width: 54px; height: 54px; border-color: rgba(0,212,255,.35); }
+    @media (pointer: coarse) { .c-dot, .c-ring { display: none; } }
 
     /* ══════════════════════════════════════════
        LOADER
@@ -364,7 +365,7 @@
     .cart-overlay.open { opacity: 1; pointer-events: auto; }
 
     .cart-drawer {
-      position: fixed; top: 0; right: 0; bottom: 0;
+      position: fixed; top: var(--nav-h); right: 0; bottom: 0;
       width: min(420px, 100vw);
       background: var(--black-2);
       border-left: 1px solid var(--border);
