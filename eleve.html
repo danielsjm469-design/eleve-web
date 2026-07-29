@@ -260,6 +260,15 @@
       -webkit-backdrop-filter: blur(22px);
       border-bottom-color: var(--border);
     }
+    /* backdrop-filter on a fixed, scrolling navbar is a common source of
+       flicker/tearing on weaker mobile GPUs — use a solid background instead */
+    @media (pointer: coarse) {
+      nav.stuck {
+        background: rgba(5,5,5,.97);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+    }
 
     .nav-logo-link {
       display: flex; align-items: center; gap: 12px;
@@ -363,6 +372,9 @@
       transition: opacity .35s ease;
     }
     .cart-overlay.open { opacity: 1; pointer-events: auto; }
+    @media (pointer: coarse) {
+      .cart-overlay { background: rgba(5,5,5,.85); backdrop-filter: none; -webkit-backdrop-filter: none; }
+    }
 
     .cart-drawer {
       position: fixed; top: var(--nav-h); right: 0; bottom: 0;
@@ -734,6 +746,8 @@
       display: flex; align-items: flex-end; padding: 22px;
     }
     .p-card:hover .p-overlay { opacity: 1; }
+    /* Touch devices have no real hover — show the CTA immediately so a single tap works */
+    @media (pointer: coarse) { .p-overlay { opacity: 1; } }
     .p-cta {
       width: 100%; padding: 12px;
       font-size: 10px; letter-spacing: .22em; text-transform: uppercase;
@@ -2156,8 +2170,12 @@ function animHero() {
       ctx.save();
       ctx.globalAlpha = Math.max(0, this.a);
       ctx.fillStyle   = this.gold ? '#C9A84C' : '#00D4FF';
-      ctx.shadowBlur  = 5;
-      ctx.shadowColor = this.gold ? '#C9A84C' : '#00D4FF';
+      // shadowBlur forces a software blur pass per particle per frame —
+      // very expensive on weaker mobile GPUs, so skip it there.
+      if (!mobile) {
+        ctx.shadowBlur  = 5;
+        ctx.shadowColor = this.gold ? '#C9A84C' : '#00D4FF';
+      }
       ctx.beginPath();
       ctx.arc(this.x, this.y, this.r, 0, 6.2832);
       ctx.fill();
@@ -2189,6 +2207,9 @@ function animHero() {
   const dot  = document.getElementById('cDot');
   const ring = document.getElementById('cRing');
   if (!dot || !ring) return;
+  // No real pointer on touch devices — skip entirely instead of running a
+  // perpetual rAF loop for an element that's hidden via CSS anyway.
+  if (window.matchMedia('(pointer: coarse)').matches) return;
   let mx = 0, my = 0, rx = 0, ry = 0;
 
   document.addEventListener('mousemove', e => {
@@ -2462,7 +2483,9 @@ function sendRecomendacion(e) {
 (function () {
   var sf = document.getElementById('contactStarfield');
   if (!sf) return;
-  var total = 80;
+  // Fewer animated layers on mobile — each star is its own composited layer
+  // and weaker GPUs choke on dozens of them running at once.
+  var total = window.innerWidth < 768 ? 34 : 80;
   var frag = document.createDocumentFragment();
   for (var i = 0; i < total; i++) {
     var s = document.createElement('div');
